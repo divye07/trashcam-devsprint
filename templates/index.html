@@ -155,127 +155,149 @@
             // Show loading state
             showState(loadingState);
 
-            let formData = new FormData();
-            formData.append("image", imageInput);
-
             try {
-                let response = await fetch("/predict", {
-                    method: "POST",
-                    body: formData
-                });
+                // Read the file as a base64 string
+                const reader = new FileReader();
                 
-                let data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || data.details || "Failed to analyze image");
-                }
-                
-                // Process and display results
-                showState(resultState);
-                const message = data.message;
-                
-                // Parse the structured output
-                const lines = message.split('\n').filter(line => line.trim() !== '');
-                let resultHTML = "";
-                let youtubeQuery = null;
-                
-                // Process each line and create formatted output
-                lines.forEach(line => {
-                    if (line.includes(":")) {
-                        const [key, value] = line.split(":", 2).map(part => part.trim());
+                reader.onload = async function() {
+                    const base64Image = reader.result;
+                    
+                    try {
+                        // Send to our Netlify function
+                        let response = await fetch("/.netlify/functions/predict", {
+                            method: "POST",
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ image: base64Image })
+                        });
                         
-                        // Create differently styled blocks for each piece of information
-                        if (key.toLowerCase() === "type") {
-                            resultHTML += `<div class="bg-blue-900/30 p-3 rounded-lg">
-                                              <span class="font-semibold text-blue-400">Waste Type:</span> 
-                                              <span class="font-bold text-white">${value}</span>
-                                           </div>`;
-                        } 
-                        else if (key.toLowerCase() === "quality") {
-                            let qualityColor = "text-yellow-400"; // Default (fair)
-                            if (value.toLowerCase().includes("poor")) qualityColor = "text-red-400";
-                            if (value.toLowerCase().includes("good")) qualityColor = "text-green-400";
-                            if (value.toLowerCase().includes("excellent")) qualityColor = "text-green-500";
-                            
-                            resultHTML += `<div class="bg-yellow-900/30 p-3 rounded-lg">
-                                              <span class="font-semibold text-yellow-400">Quality:</span> 
-                                              <span class="font-bold ${qualityColor}">${value}</span>
-                                           </div>`;
+                        let data = await response.json();
+                        
+                        if (!response.ok) {
+                            throw new Error(data.error || data.details || "Failed to analyze image");
                         }
-                        else if (key.toLowerCase().includes("home") && key.toLowerCase().includes("restoration")) {
-                            const isRestorable = value.toLowerCase().includes("yes");
-                            const restoreColor = isRestorable ? "text-green-400" : "text-red-400";
-                            
-                            resultHTML += `<div class="bg-purple-900/30 p-3 rounded-lg">
-                                              <span class="font-semibold text-purple-400">Home Restoration:</span> 
-                                              <span class="font-bold ${restoreColor}">${value}</span>
-                                           </div>`;
-                        }
-                        else if (key.toLowerCase() === "disposal") {
-                            // Extract the color word from the disposal value
-                            const colorWords = ["blue", "green", "black", "red", "yellow", "brown", "gray", "grey", "orange", "purple", "white"];
-                            let trashCanColor = "default-bin";
-                            let colorClass = "text-white";
-                            
-                            // Check if any color word is in the value
-                            for (const color of colorWords) {
-                                if (value.toLowerCase().includes(color)) {
-                                    trashCanColor = color;
+                        
+                        // Process and display results
+                        showState(resultState);
+                        const message = data.message;
+                        
+                        // Parse the structured output
+                        const lines = message.split('\n').filter(line => line.trim() !== '');
+                        let resultHTML = "";
+                        let youtubeQuery = null;
+                        
+                        // Process each line and create formatted output
+                        lines.forEach(line => {
+                            if (line.includes(":")) {
+                                const [key, value] = line.split(":", 2).map(part => part.trim());
+                                
+                                // Create differently styled blocks for each piece of information
+                                if (key.toLowerCase() === "type") {
+                                    resultHTML += `<div class="bg-blue-900/30 p-3 rounded-lg">
+                                                      <span class="font-semibold text-blue-400">Waste Type:</span> 
+                                                      <span class="font-bold text-white">${value}</span>
+                                                   </div>`;
+                                } 
+                                else if (key.toLowerCase() === "quality") {
+                                    let qualityColor = "text-yellow-400"; // Default (fair)
+                                    if (value.toLowerCase().includes("poor")) qualityColor = "text-red-400";
+                                    if (value.toLowerCase().includes("good")) qualityColor = "text-green-400";
+                                    if (value.toLowerCase().includes("excellent")) qualityColor = "text-green-500";
                                     
-                                    // Assign appropriate text color class based on bin color
-                                    switch (color) {
-                                        case "blue": colorClass = "text-blue-400"; break;
-                                        case "green": colorClass = "text-green-400"; break;
-                                        case "black": colorClass = "text-gray-900"; break;
-                                        case "red": colorClass = "text-red-500"; break;
-                                        case "yellow": colorClass = "text-yellow-400"; break;
-                                        case "brown": colorClass = "text-yellow-800"; break;
-                                        case "gray": case "grey": colorClass = "text-gray-400"; break;
-                                        case "orange": colorClass = "text-orange-400"; break;
-                                        case "purple": colorClass = "text-purple-400"; break;
-                                        case "white": colorClass = "text-white"; break;
-                                        default: colorClass = "text-white";
-                                    }
-                                    break;
+                                    resultHTML += `<div class="bg-yellow-900/30 p-3 rounded-lg">
+                                                      <span class="font-semibold text-yellow-400">Quality:</span> 
+                                                      <span class="font-bold ${qualityColor}">${value}</span>
+                                                   </div>`;
                                 }
+                                else if (key.toLowerCase().includes("home") && key.toLowerCase().includes("restoration")) {
+                                    const isRestorable = value.toLowerCase().includes("yes");
+                                    const restoreColor = isRestorable ? "text-green-400" : "text-red-400";
+                                    
+                                    resultHTML += `<div class="bg-purple-900/30 p-3 rounded-lg">
+                                                      <span class="font-semibold text-purple-400">Home Restoration:</span> 
+                                                      <span class="font-bold ${restoreColor}">${value}</span>
+                                                   </div>`;
+                                }
+                                else if (key.toLowerCase() === "disposal") {
+                                    // Extract the color word from the disposal value
+                                    const colorWords = ["blue", "green", "black", "red", "yellow", "brown", "gray", "grey", "orange", "purple", "white"];
+                                    let trashCanColor = "default-bin";
+                                    let colorClass = "text-white";
+                                    
+                                    // Check if any color word is in the value
+                                    for (const color of colorWords) {
+                                        if (value.toLowerCase().includes(color)) {
+                                            trashCanColor = color;
+                                            
+                                            // Assign appropriate text color class based on bin color
+                                            switch (color) {
+                                                case "blue": colorClass = "text-blue-400"; break;
+                                                case "green": colorClass = "text-green-400"; break;
+                                                case "black": colorClass = "text-gray-900"; break;
+                                                case "red": colorClass = "text-red-500"; break;
+                                                case "yellow": colorClass = "text-yellow-400"; break;
+                                                case "brown": colorClass = "text-yellow-800"; break;
+                                                case "gray": case "grey": colorClass = "text-gray-400"; break;
+                                                case "orange": colorClass = "text-orange-400"; break;
+                                                case "purple": colorClass = "text-purple-400"; break;
+                                                case "white": colorClass = "text-white"; break;
+                                                default: colorClass = "text-white";
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    
+                                    // Enhanced display with color highlighting
+                                    resultHTML += `<div class="bg-green-900/30 p-3 rounded-lg">
+                                                      <span class="font-semibold text-green-400">Disposal Method:</span> 
+                                                      <span class="font-bold text-white">Use the <span class="font-extrabold ${colorClass}">${trashCanColor.toUpperCase()}</span> trash bin</span> - ${value}
+                                                   </div>`;
+                                }
+                                else if (key.toLowerCase().includes("youtube") || key.toLowerCase().includes("query")) {
+                                    youtubeQuery = value;
+                                }
+                                else {
+                                    // Generic styling for any other lines
+                                    resultHTML += `<div class="bg-gray-800 p-3 rounded-lg">
+                                                      <span class="font-semibold text-gray-400">${key}:</span> 
+                                                      <span class="text-white">${value}</span>
+                                                   </div>`;
+                                }
+                            } else {
+                                // For lines without a colon
+                                resultHTML += `<p class="text-gray-300">${line}</p>`;
                             }
-                            
-                            // Enhanced display with color highlighting
-                            resultHTML += `<div class="bg-green-900/30 p-3 rounded-lg">
-                                              <span class="font-semibold text-green-400">Disposal Method:</span> 
-                                              <span class="font-bold text-white">Use the <span class="font-extrabold ${colorClass}">${trashCanColor.toUpperCase()}</span> trash bin</span> - ${value}
-                                           </div>`;
+                        });
+                        
+                        resultDiv.innerHTML = resultHTML;
+                        
+                        // Handle YouTube query if present
+                        if (youtubeQuery && youtubeQuery !== "N/A") {
+                            youtubeSection.classList.remove("hidden");
+                            youtubeLink.href = `https://www.youtube.com/results?search_query=${encodeURIComponent(youtubeQuery)}`;
+                        } else {
+                            youtubeSection.classList.add("hidden");
                         }
-                        else if (key.toLowerCase().includes("youtube") || key.toLowerCase().includes("query")) {
-                            youtubeQuery = value;
-                        }
-                        else {
-                            // Generic styling for any other lines
-                            resultHTML += `<div class="bg-gray-800 p-3 rounded-lg">
-                                              <span class="font-semibold text-gray-400">${key}:</span> 
-                                              <span class="text-white">${value}</span>
-                                           </div>`;
-                        }
-                    } else {
-                        // For lines without a colon
-                        resultHTML += `<p class="text-gray-300">${line}</p>`;
+                        
+                    } catch (error) {
+                        console.error("Error during analysis:", error);
+                        showState(errorState);
+                        errorMessage.textContent = error.message || "Failed to analyze the image.";
                     }
-                });
+                };
                 
-                resultDiv.innerHTML = resultHTML;
+                reader.onerror = function() {
+                    showState(errorState);
+                    errorMessage.textContent = "Could not read the image file.";
+                };
                 
-                // Handle YouTube query if present
-                if (youtubeQuery && youtubeQuery !== "N/A") {
-                    youtubeSection.classList.remove("hidden");
-                    youtubeLink.href = `https://www.youtube.com/results?search_query=${encodeURIComponent(youtubeQuery)}`;
-                } else {
-                    youtubeSection.classList.add("hidden");
-                }
-                
+                // Start reading the file
+                reader.readAsDataURL(imageInput);
             } catch (error) {
+                console.error("Error processing image:", error);
                 showState(errorState);
-                errorMessage.textContent = error.message || "Failed to analyze the image. Please try again.";
-                console.error("Error:", error);
+                errorMessage.textContent = "Error processing image. Please try again.";
             }
         });
         
