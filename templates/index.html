@@ -254,6 +254,12 @@
                                                       <span class="font-bold text-white">Use the <span class="font-extrabold ${colorClass}">${trashCanColor.toUpperCase()}</span> trash bin</span> - ${value}
                                                    </div>`;
                                 }
+                                else if (key.toLowerCase().includes("environmental") && key.toLowerCase().includes("impact")) {
+                                    resultHTML += `<div class="bg-teal-900/30 p-3 rounded-lg">
+                                                      <span class="font-semibold text-teal-400">Environmental Impact:</span> 
+                                                      <span class="text-white">${value}</span>
+                                                   </div>`;
+                                }
                                 else if (key.toLowerCase().includes("youtube") || key.toLowerCase().includes("query")) {
                                     youtubeQuery = value;
                                 }

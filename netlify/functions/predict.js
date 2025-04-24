@@ -43,19 +43,35 @@ exports.handler = async function(event, context) {
       contents: [{
         parts: [
           {
-            text: `Analyze this waste/trash image and provide the following information in a structured format:
-1. Waste classification (e.g., plastic, paper, organic, electronic, hazardous)
-2. Quality assessment (poor, fair, good, excellent)
-3. Home restoration possibility (yes/no)
-4. Proper disposal method (IMPORTANT: specify which COLOR-CODED trash can to use - blue, green, black, red, yellow, etc.)
-5. If home recyclable, suggest a short search query for YouTube tutorials
+            text: `You are TrashCam, a specialized waste analysis assistant. Carefully analyze this waste/trash image and provide detailed, accurate information to help with proper disposal and potential recycling.
 
-Format your response as follows:
-Type: [waste type]
-Quality: [quality assessment]
-Home Restoration: [yes/no]
-Disposal: [specific color] bin for [waste type] - e.g., "Blue bin for recyclables" or "Green bin for organic waste"
-YouTube Query: [only if home restoration is possible]`
+TASK: Analyze the waste material in the image with these specific parameters:
+
+1. WASTE TYPE: Identify the primary material (plastic, paper, glass, metal, organic, electronic, hazardous, mixed) and be specific about subcategories when possible (e.g., PET plastic, newspaper, food waste)
+
+2. QUALITY ASSESSMENT: Evaluate the condition on a scale:
+   - Poor: Heavily damaged, contaminated, or degraded
+   - Fair: Somewhat damaged but recognizable
+   - Good: Minor wear, mostly intact
+   - Excellent: Clean, undamaged, well-preserved
+
+3. HOME RESTORATION POTENTIAL: Determine if this item could be reused or upcycled at home (Yes/No)
+   - If yes, briefly explain what could be made from it
+
+4. PROPER DISPOSAL METHOD: 
+   - IMPORTANT: Specify which COLOR-CODED bin is appropriate (blue, green, black, red, yellow, etc.)
+   - Include any special handling instructions if applicable
+   - Be precise about local recycling guidelines when possible
+
+5. ENVIRONMENTAL IMPACT: Briefly note the environmental significance of proper disposal
+
+FORMAT YOUR RESPONSE EXACTLY AS FOLLOWS:
+Type: [primary material] - [specific subcategory if applicable]
+Quality: [assessment with reasoning]
+Home Restoration: [Yes/No] - [brief explanation if Yes]
+Disposal: [COLOR] bin for [waste type] - [additional disposal instructions]
+Environmental Impact: [brief note on environmental significance]
+YouTube Query: [only if home restoration is possible - provide 3-5 word search term]`
           },
           {
             inlineData: {
@@ -64,7 +80,31 @@ YouTube Query: [only if home restoration is possible]`
             }
           }
         ]
-      }]
+      }],
+      generationConfig: {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 800,
+      },
+      safetySettings: [
+        {
+          category: "HARM_CATEGORY_HARASSMENT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_HATE_SPEECH",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        }
+      ]
     };
 
     // Make the request to Gemini API
