@@ -1,12 +1,15 @@
 [build]
-  command = "pip install -r requirements.txt"
   publish = "."
-  functions = "netlify/functions"
+  command = """
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+  """
 
-[dev]
-  command = "python app.py"
-  port = 5000
-  publish = "."
+[build.environment]
+  PYTHON_VERSION = "3.8"
+
+[[plugins]]
+  package = "@netlify/plugin-functions-core"
 
 [[redirects]]
   from = "/api/*"
@@ -15,9 +18,11 @@
 
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/templates/index.html"
   status = 200
 
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild" 
+[dev]
+  command = "python app.py"
+  framework = "#custom"
+  port = 5000
+  targetPort = 5000
