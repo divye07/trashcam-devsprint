@@ -6,9 +6,6 @@
   PYTHON_VERSION = "3.9"
   NODE_VERSION = "16"
 
-[[plugins]]
-  package = "@netlify/plugin-functions-core"
-
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
