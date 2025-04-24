@@ -1,12 +1,10 @@
 [build]
   publish = "."
-  command = """
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
-  """
+  command = "bash netlify-build.sh"
 
 [build.environment]
   PYTHON_VERSION = "3.9"
+  NODE_VERSION = "16"
 
 [[plugins]]
   package = "@netlify/plugin-functions-core"
