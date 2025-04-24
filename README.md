@@ -110,11 +110,6 @@ To deploy this application on Netlify:
 - Integration with local waste management schedules
 - Gamification elements to encourage proper waste disposal
 
-## 🤝 Team Members
-
-- [Team Member 1] - [Role]
-- [Team Member 2] - [Role]
-- [Team Member 3] - [Role]
 
 ## 📄 License
 
