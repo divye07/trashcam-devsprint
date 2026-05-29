@@ -120,3 +120,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Google DevSprint 2k25 organizers at VIT AP University
 - Google Gemini API team for providing the vision recognition capabilities
 - All mentors and judges who provided feedback and guidance 
+-Hi from devang
